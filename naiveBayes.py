@@ -67,8 +67,54 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         """
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        Plabel = util.Counter() 
+        featLabel = util.Counter()
+        conditionalProb = util.Counter()
+        bestParams = util.Counter()
+        myAccuracy = -1       
+        
+        for i in range(len(trainingData)):
+            data = trainingData[i]
+            label = trainingLabels[i]
+            Plabel[label] += 1
+            for feat, val in data.items():
+                featLabel[(feat,label)] += 1
+                if val > 0:
+                    conditionalProb[(feat,label)] += 1
+        
+        for k in kgrid:
+            prob = util.Counter()
+            counts = util.Counter()
+            condProb = util.Counter()
+            
+            for key, val in Plabel.items():
+                prob[key] += val
+            for key, val in featLabel.items():
+                counts[key] += val
+            for key, val in conditionalProb.items():
+                condProb[key] += val
+                
+            for label in self.legalLabels:
+                for feat in self.features:
+                    condProb[(feat,label)] += k
+                    counts[(feat,label)] += 2*k
+                    
+            prob.normalize()
+            for param, count in condProb.items():
+                condProb[param] = count*1.0 / counts[param]
+                
+            self.pLabel = prob
+            self.condProb = condProb
+            
+            predict = self.classify(validationData)
+            correct = [predict[i] == validationLabels[i] for i in range(len(validationLabels))].count(True)
+            print correct
+            
+            if correct > myAccuracy:
+                bestParams = (prob, condProb, k)
+                myAccuracy = correct
+                
+        self.pLabel, self.condProb, self.k = bestParams
         
     def classify(self, testData):
         """
@@ -94,10 +140,13 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         self.legalLabels.
         """
         logJoint = util.Counter()
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        for label in self.legalLabels:
+            logJoint[label] = math.log(self.pLabel[label])
+            for feat, val in datum.items():
+                if val > 0:
+                    logJoint[label] += math.log(self.condProb[feat,label])
+                else:
+                    logJoint[label] += math.log(1-self.condProb[feat,label])
         return logJoint
 
     def findHighOddsFeatures(self, label1, label2):
@@ -108,8 +157,11 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         Note: you may find 'self.features' a useful way to loop through all possible features
         """
         featuresOdds = []
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        for feat in self.features:
+            featuresOdds.append((self.condProb[feat,label1]/self.condProb[feat,label2], feat))
+            featuresOdds.sort()
+            for val, feat in featuresOdds[-100:]:
+                featureOdds = feat
         
         return featuresOdds
