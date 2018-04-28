@@ -14,6 +14,7 @@
 
 # Perceptron implementation
 import util
+import math
 PRINT = True
 
 class PerceptronClassifier:
@@ -55,7 +56,19 @@ class PerceptronClassifier:
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
                 "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
+                myScore = float("-inf")
+                myLabel = None
+                thisData = trainingData[i]
+                for thisLabel in self.legalLabels:
+                    thisScore = thisData * self.weights[thisLabel]
+                    if thisScore > myScore:
+                        myScore = thisScore
+                        myLabel = thisLabel
+
+                if myLabel != trainingLabels[i]:
+                    self.weights[trainingLabels[i]] = self.weights[myLabel] + thisData
+                    self.weights[myLabel] = self.weights[myLabel] - thisData
+
 
     def classify(self, data ):
         """
