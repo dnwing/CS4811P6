@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -14,7 +14,6 @@
 
 # Perceptron implementation
 import util
-import math
 PRINT = True
 
 class PerceptronClassifier:
@@ -55,20 +54,14 @@ class PerceptronClassifier:
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
-                "*** YOUR CODE HERE ***"
-                myScore = float("-inf")
-                myLabel = None
-                thisData = trainingData[i]
-                for thisLabel in self.legalLabels:
-                    thisScore = thisData * self.weights[thisLabel]
-                    if thisScore > myScore:
-                        myScore = thisScore
-                        myLabel = thisLabel
 
-                if myLabel != trainingLabels[i]:
-                    self.weights[trainingLabels[i]] = self.weights[myLabel] + thisData
-                    self.weights[myLabel] = self.weights[myLabel] - thisData
+                # find the label with highest score:
+                highestScore = self.classify([trainingData[i]])[0]
 
+                # y' != y*, update weight vectors
+                if highestScore != trainingLabels[i]:
+                    self.weights[trainingLabels[i]] = self.weights[trainingLabels[i]] + trainingData[i]
+                    self.weights[highestScore] = self.weights[highestScore] - trainingData[i]
 
     def classify(self, data ):
         """
@@ -89,12 +82,13 @@ class PerceptronClassifier:
     def findHighOddsFeatures(self, label1, label2):
         """
         Returns a list of the 100 features with the greatest difference in weights:
-                     w_label1 - w_label2
+        w_label1 - w_label2
         """
+        label1Weights = self.weights[label1]
+        label2Weights = self.weights[label2]
+        featureDiff = {}
+        for feature in self.features:
+            featureDiff[feature] = label1Weights[feature] - label2Weights[feature]
 
-        featuresOdds = []
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        featuresOdds = sorted(featureDiff, key=featureDiff.get, reverse=True)[:100]
         return featuresOdds
