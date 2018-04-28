@@ -156,12 +156,18 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
 
         Note: you may find 'self.features' a useful way to loop through all possible features
         """
-        featuresOdds = []
-        
-        for feat in self.features:
-            featuresOdds.append((self.condProb[feat,label1]/self.condProb[feat,label2], feat))
-            featuresOdds.sort()
-            for val, feat in featuresOdds[-100:]:
-                featureOdds = feat
-        
-        return featuresOdds
+        featuresOdds = {}
+
+        for feature in self.features:
+            featuresOdds[feature] = self.condProb[feature,label1]/self.condProb[feature,label2]
+
+        return sorted(featuresOdds, key=featuresOdds.get, reverse=True)[:100]
+        # featuresOdds = []
+        # 
+        # for feat in self.features:
+        #     featuresOdds.append((self.condProb[feat,label1]/self.condProb[feat,label2], feat))
+        #     featuresOdds.sort()
+        #     for val, feat in featuresOdds[-100:]:
+        #         featureOdds = feat
+        # 
+        # return featuresOdds
