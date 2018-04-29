@@ -67,54 +67,54 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         """
 
         "*** YOUR CODE HERE ***"
-        Plabel = util.Counter() 
-        featLabel = util.Counter()
-        conditionalProb = util.Counter()
-        bestParams = util.Counter()
-        myAccuracy = -1       
+        Plabel = util.Counter()   #probability of labels
+        featLabel = util.Counter() #feature,label count
+        conditionalProb = util.Counter() #conditional probabilities
+        best = util.Counter()
+        myAccuracy = -float('inf')       
         
-        for i in range(len(trainingData)):
-            data = trainingData[i]
+        for i in range(len(trainingData)): #getting a count of everything to get probabilities
             label = trainingLabels[i]
             Plabel[label] += 1
-            for feat, val in data.items():
+            for feat, val in trainingData[i].items():
                 featLabel[(feat,label)] += 1
                 if val > 0:
                     conditionalProb[(feat,label)] += 1
+            
+        
+        Plabel.normalize()
+        self.pLabel = Plabel
         
         for k in kgrid:
-            prob = util.Counter()
             counts = util.Counter()
             condProb = util.Counter()
-            
-            for key, val in Plabel.items():
-                prob[key] += val
-            for key, val in featLabel.items():
+
+            for key, val in featLabel.items(): #temp collections
                 counts[key] += val
             for key, val in conditionalProb.items():
                 condProb[key] += val
                 
-            for label in self.legalLabels:
+            for label in self.legalLabels:     #Smoothing
                 for feat in self.features:
                     condProb[(feat,label)] += k
                     counts[(feat,label)] += 2*k
                     
-            prob.normalize()
-            for param, count in condProb.items():
-                condProb[param] = count*1.0 / counts[param]
+            for key, val in condProb.items(): #normalizing
+                condProb[key] = val*1.0 / counts[key]
                 
-            self.pLabel = prob
             self.condProb = condProb
             
+            #our predicitions given our values
             predict = self.classify(validationData)
             correct = [predict[i] == validationLabels[i] for i in range(len(validationLabels))].count(True)
+            
             print correct
             
-            if correct > myAccuracy:
-                bestParams = (prob, condProb, k)
+            if correct > myAccuracy: #keep track of best k and condProb
                 myAccuracy = correct
+                best = (condProb, k)
                 
-        self.pLabel, self.condProb, self.k = bestParams
+        self.condProb, self.k = best
         
     def classify(self, testData):
         """
@@ -162,12 +162,3 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             featuresOdds[feature] = self.condProb[feature,label1]/self.condProb[feature,label2]
 
         return sorted(featuresOdds, key=featuresOdds.get, reverse=True)[:100]
-        # featuresOdds = []
-        # 
-        # for feat in self.features:
-        #     featuresOdds.append((self.condProb[feat,label1]/self.condProb[feat,label2], feat))
-        #     featuresOdds.sort()
-        #     for val, feat in featuresOdds[-100:]:
-        #         featureOdds = feat
-        # 
-        # return featuresOdds
